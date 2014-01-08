@@ -1,14 +1,2 @@
 #!/bin/sh
-set -e
-mkdir -p tmp
-case "$1" in
-  -H|-x)
-    echo '<!-- app source: https://github.com/steakknife/shell2web -->'
-    ;;
-  -j)
-    ;;
-  *)
-    echo '# app source: https://github.com/steakknife/shell2web'
-    ;;
-esac
 exec ./latest all --silent --disable-cache --disable-new "$@"
