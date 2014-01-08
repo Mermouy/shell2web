@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+mkdir -p tmp
+exec ./latest all --silent --disable-cache --disable-new
