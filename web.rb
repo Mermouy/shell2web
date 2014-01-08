@@ -3,14 +3,21 @@ require 'sinatra'
 require 'fileutils'
 require 'open3'
 
+def var(env_name, default=nil)
+  ENV.include?(env_name) ? ENV[env_name] : default
+end
 
-# config
-CMD='./run' # what to run
-CONTENT_TYPE='text/plain'
-LIVE=true # allow /live
-TIME=true # show start, end and elapsed time
-DELAY_BETWEEN_UPDATES=5*60  # 5 minutes
-AVERAGE_RUN_TIME=4*60
+def str_to_bool(str)
+  str == true || str =~ /^(true|1|yes|y|on|si|aye)$/i
+end
+
+# config (ugly, cleanup todo)
+SHELL2WEB_CMD=var('SHELL2WEB_CMD', './run') # what to run
+SHELL2WEB_CONTENT_TYPE=var('SHELL2WEB_CONTENT_TYPE', 'text/plain')
+SHELL2WEB_LIVE=str_to_bool(var('SHELL2WEB_LIVE', 'true')) # allow /live
+SHELL2WEB_TIME=str_to_bool(var('SHELL2WEB_TIME', 'true')) # show start, end and elapsed time
+SHELL2WEB_DELAY=Integer(var('SHELL2WEB_DELAY', 5*60))  # 5 minutes
+SHELL2WEB_AVG_RUN_TIME=Integer(var('SHELL2WEB_AVG_RUN_TIME', 4*60))
 # config
 
 OUTPUT='tmp/output.txt'
@@ -40,21 +47,21 @@ end
 
 def run(f) 
   # header
-  if TIME
+  if SHELL2WEB_TIME
     start_date = Time.now
     f << "# started: #{start_date}\n"
   end
 
   # body
   exit_status = -1
-  Open3.popen2e(CMD) { |stdin, stdout_and_stderr, wait_thr| 
+  Open3.popen2e(SHELL2WEB_CMD) { |stdin, stdout_and_stderr, wait_thr|
     stdout_and_stderr.each {|line| f << line }
     exit_status = wait_thr.value.to_i
   }
 
   # footer
   last = "exit code: #{exit_status}"
-  if TIME
+  if SHELL2WEB_TIME
     end_date = Time.now
     elapsed_seconds = end_date - start_date
     last = "finished: #{end_date}   elapsed: #{seconds_to_english(elapsed_seconds)}  " + last
@@ -68,19 +75,19 @@ Thread.new do
     FileUtils.mkdir_p('tmp')
     File.open(OUTPUT_TMP, 'w') {|f| run(f) }
     FileUtils.mv OUTPUT_TMP, OUTPUT, :force => true
-    sleep(DELAY_BETWEEN_UPDATES)
+    sleep(SHELL2WEB_DELAY)
   end
 end
 
 before do
-  content_type CONTENT_TYPE
+  content_type SHELL2WEB_CONTENT_TYPE
 end
 
 get '/live' do
   stream do |f|
     run(f)
   end
-end if LIVE
+end if SHELL2WEB_LIVE
 
 get '/' do
   if File.exist? OUTPUT
@@ -92,6 +99,7 @@ get '/' do
     }
     result
   else
-    "No output right now.   Takes up to #{seconds_to_english(DELAY_BETWEEN_UPDATES+AVERAGE_RUN_TIME)} have results."
+    up_to_estimate = SHELL2WEB_AVG_RUN_TIME + SHELL2WEB_DELAY
+    "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."
   end
 end
