@@ -6,11 +6,17 @@ The cached page will show up at http://XXXXXXXX.herokuapp.com
 
 The script can be forced to run by visiting http://XXXXXXXX.herokuapp.com/live (disable by LIVE=false)
 
+### Local dev 
 
-### Recommended config
+    foreman start
 
-  `heroku config:set WEB_TIMEOUT=600`
-  `heroku config:set WEB_CONCURRENCY=4`
+### Recommended web config & launch
+
+    heroku create
+    heroku config:set WEB_TIMEOUT=600
+    heroku config:set WEB_CONCURRENCY=4
+    git push heroku master
+
 
 
 ### Example
