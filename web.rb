@@ -83,15 +83,15 @@ get '/live' do
 end if LIVE
 
 get '/' do
-  result = ''
   if File.exist? OUTPUT
-    result = "No output right now.   Takes up to #{seconds_to_english(DELAY_BETWEEN_UPDATES+AVERAGE_RUN_TIME)} have results."
-  else
+    result = ''
     File.open(OUTPUT, 'r') { |f|
       while line = f.gets
         result += (line =~ /\n$/) ? (line.chop + "\r\n") : line
       end
     }
+    result
+  else
+    "No output right now.   Takes up to #{seconds_to_english(DELAY_BETWEEN_UPDATES+AVERAGE_RUN_TIME)} have results."
   end
-  result
 end
