@@ -4,11 +4,14 @@ require 'fileutils'
 require 'open3'
 
 
-TIME=true
-CMD='./run'
+# config
+CMD='./run' # what to run
+TIME=true # show start, end and elapsed time
+DELAY_BETWEEN_UPDATES=5*60 # 5 minutes
 OUTPUT='tmp/output.txt'
 OUTPUT_TMP=OUTPUT+$$.to_s
-WAIT_TIME=5*60 # 5 minutes
+# config
+
 
 DAYS_PER_YEAR = 365.242199
 DAYS_PER_MONTH = DAYS_PER_YEAR / 12
@@ -38,6 +41,7 @@ def run(f)
     f << "# started: #{start_date}\n"
   end
 
+  exit_status = -1
   Open3.popen2e(CMD) { |stdin, stdout_and_stderr, wait_thr| 
     stdout_and_stderr.each {|line|
       f << line
@@ -56,15 +60,11 @@ end
 
 Thread.new do
   loop do 
-    $stderr.puts "Waiting"
-    sleep(WAIT_TIME)
-    $stderr.puts "Running"
-    exit_status = -1
+    sleep(DELAY_BETWEEN_UPDATES)
     File.open(OUTPUT_TMP, 'w') {|f| run(f) }
     FileUtils.mv OUTPUT_TMP, OUTPUT, :force => true
-    $stderr.puts "Done"
   end
-end if false
+end
 
 before do
   content_type 'text/plain'
