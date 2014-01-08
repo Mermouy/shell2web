@@ -6,12 +6,14 @@ require 'open3'
 
 # config
 CMD='./run' # what to run
+CONTENT_TYPE='text/plain'
+LIVE=true # allow /live
 TIME=true # show start, end and elapsed time
 DELAY_BETWEEN_UPDATES=5*60 # 5 minutes
-OUTPUT='tmp/output.txt'
-OUTPUT_TMP=OUTPUT+$$.to_s
 # config
 
+OUTPUT='tmp/output.txt'
+OUTPUT_TMP=OUTPUT+$$.to_s
 
 DAYS_PER_YEAR = 365.242199
 DAYS_PER_MONTH = DAYS_PER_YEAR / 12
@@ -61,20 +63,21 @@ end
 Thread.new do
   loop do 
     sleep(DELAY_BETWEEN_UPDATES)
+    FileUtils.mkdir_p('tmp')
     File.open(OUTPUT_TMP, 'w') {|f| run(f) }
     FileUtils.mv OUTPUT_TMP, OUTPUT, :force => true
   end
 end
 
 before do
-  content_type 'text/plain'
+  content_type CONTENT_TYPE
 end
 
 get '/live' do
   stream do |f|
     run(f)
   end
-end 
+end if LIVE
 
 get '/' do
   result = ''
