@@ -767,10 +767,6 @@ latest_gnutls() {
   gnu 'gnutls'
 }
 
-latest_wget() {
-  gnu 'wget'
-}
-
 latest_curl() {
   note_insecure 'cURL'
   fetch curl http://curl.haxx.se/ | match 'The most recent stable version of curl is version ' | match -o '[0-9][\.0-9]*[0-9]'
