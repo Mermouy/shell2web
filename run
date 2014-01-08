@@ -1,8 +1,14 @@
 #!/bin/sh
 set -e
 mkdir -p tmp
-if [ -z "$1" ]; then 
-  echo '# app source: https://github.com/steakknife/shell2web'
-  echo '# script source: https://gist.github.com/7623744'
-fi  
+case "$1" in
+  -H|-x)
+    echo '<!-- app source: https://github.com/steakknife/shell2web -->'
+    ;;
+  -j)
+    ;;
+  *)
+    echo '# app source: https://github.com/steakknife/shell2web'
+    ;;
+esac
 exec ./latest all --silent --disable-cache --disable-new "$@"

@@ -101,7 +101,7 @@ end if SHELL2WEB_LIVE
 
 FORMATS=%w[html json toml txt xml yaml]
 FORMAT_ARGS=[['-H'], ['-j'], ['-t'], [], ['-x'], ['-y']]
-FORMAT_CONTENT_TYPES=%w[text/html application/json text/x-toml text/plain application/xml text/x-yaml]
+FORMAT_CONTENT_TYPES=%w[text/html application/json text/plain text/plain application/xml text/plain]
 
 get %r{^/(|txt|text|html|yaml|xml|toml|json)$} do |format|
   format ||= 'html'
@@ -111,7 +111,7 @@ get %r{^/(|txt|text|html|yaml|xml|toml|json)$} do |format|
 
   if ! File.exist?(file)
     up_to_estimate = SHELL2WEB_AVG_RUN_TIME + SHELL2WEB_DELAY
-    return [404, {}, "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."]
+    return [503, {'Content-Type' => 'text/plain'}, "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."]
   end
 
   content_type FORMAT_CONTENT_TYPES[FORMATS.index(format)]
