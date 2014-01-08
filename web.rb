@@ -21,7 +21,7 @@ SHELL2WEB_AVG_RUN_TIME=Integer(var('SHELL2WEB_AVG_RUN_TIME', 4*60))
 # config
 
 OUTPUT='tmp/output.txt'
-OUTPUT_TMP=OUTPUT+$$.to_s
+OUTPUT_TMP=$$.to_s+OUTPUT
 
 DAYS_PER_YEAR = 365.2425
 DAYS_PER_MONTH = DAYS_PER_YEAR / 12
@@ -45,36 +45,42 @@ def seconds_to_english(sec, sep=' ')
   }.compact << plural(sec, 'second')).join(sep)
 end
 
-def run(f) 
+def run(f, args, format) 
   # header
-  if SHELL2WEB_TIME
+  if SHELL2WEB_TIME && format == 'txt'
     start_date = Time.now
     f << "# started: #{start_date}\n"
   end
 
   # body
   exit_status = -1
-  Open3.popen2e(SHELL2WEB_CMD) { |stdin, stdout_and_stderr, wait_thr|
+  Open3.popen2e(SHELL2WEB_CMD, *args) { |stdin, stdout_and_stderr, wait_thr|
     stdout_and_stderr.each {|line| f << line }
     exit_status = wait_thr.value.to_i
   }
 
   # footer
-  last = "exit code: #{exit_status}"
-  if SHELL2WEB_TIME
-    end_date = Time.now
-    elapsed_seconds = end_date - start_date
-    last = "finished: #{end_date}   elapsed: #{seconds_to_english(elapsed_seconds)}  " + last
+  if format == 'txt'
+    last = "exit code: #{exit_status}" 
+    if SHELL2WEB_TIME
+      end_date = Time.now
+      elapsed_seconds = end_date - start_date
+      last = "finished: #{end_date}   elapsed: #{seconds_to_english(elapsed_seconds)}  " + last
+    end
+    f << "# #{last}\n"
   end
-  f << "# #{last}\n"
 end
 
 # background worker to update cached copy for /
 Thread.new do
   loop do 
     FileUtils.mkdir_p('tmp')
-    File.open(OUTPUT_TMP, 'w') {|f| run(f) }
-    FileUtils.mv OUTPUT_TMP, OUTPUT, :force => true
+    FORMATS.zip(FORMAT_ARGS).each { |format, args|
+      tmp_filename = OUTPUT_TMP+'.'+format
+      File.open(tmp_filename, 'w') {|f| run(f, args, format) }
+      filename = OUTPUT+'.'+format
+      FileUtils.mv tmp_filename, filename, :force => true
+    }
     sleep(SHELL2WEB_DELAY)
   end
 end
@@ -83,23 +89,37 @@ before do
   content_type SHELL2WEB_CONTENT_TYPE
 end
 
-get '/live' do
+get %r{^/live(/(|txt|text|html|yaml|xml|toml|json))?$} do |_, format|
+  # fix format to ext
+  format = 'txt' if format == 'text' || format.nil?
+
   stream do |f|
-    run(f)
+    run(f, FORMAT_ARGS[FORMATS.index(format)], format)
   end
 end if SHELL2WEB_LIVE
 
-get '/' do
-  if File.exist? OUTPUT
-    result = ''
-    File.open(OUTPUT, 'r') { |f|
-      while line = f.gets
-        result += (line =~ /\n$/) ? (line.chop + "\r\n") : line
-      end
-    }
-    result
-  else
+FORMATS=%w[html json toml txt xml yaml]
+FORMAT_ARGS=[['-H'], ['-j'], ['-t'], [], ['-x'], ['-y']]
+
+get %r{^/(|txt|text|html|yaml|xml|toml|json)$} do |format|
+  # check format
+  format ||= 'txt'
+  format.downcase if format.is_a?(String)
+  format = 'txt' if format == 'text' 
+  return [404, '', 'Bad format'] unless FORMATS.include? format
+
+  file="#{OUTPUT}.#{format}"
+
+  if ! File.exist?(file)
     up_to_estimate = SHELL2WEB_AVG_RUN_TIME + SHELL2WEB_DELAY
-    "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."
+    return [404, '', "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."]
   end
+
+  result = ''
+  File.open(file, 'r') { |f|
+    while line = f.gets
+      result += (line =~ /\n$/) ? (line.chop + "\r\n") : line
+    end
+  }
+  result
 end

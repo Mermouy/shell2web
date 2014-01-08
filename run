@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 mkdir -p tmp
-echo '# app source: https://github.com/steakknife/shell2web'
-echo '# script source: https://gist.github.com/7623744'
-exec ./latest all --silent --disable-cache --disable-new
+if [ -z "$1" ]; then 
+  echo '# app source: https://github.com/steakknife/shell2web'
+  echo '# script source: https://gist.github.com/7623744'
+fi  
+exec ./latest all --silent --disable-cache --disable-new "$@"
