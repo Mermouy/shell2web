@@ -106,13 +106,13 @@ get %r{^/(|txt|text|html|yaml|xml|toml|json)$} do |format|
   format ||= 'txt'
   format.downcase if format.is_a?(String)
   format = 'txt' if format == 'text' 
-  return [404, '', 'Bad format'] unless FORMATS.include? format
+  return [404, {}, 'Bad format'] unless FORMATS.include? format
 
   file="#{OUTPUT}.#{format}"
 
   if ! File.exist?(file)
     up_to_estimate = SHELL2WEB_AVG_RUN_TIME + SHELL2WEB_DELAY
-    return [404, '', "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."]
+    return [404, {}, "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."]
   end
 
   result = ''
