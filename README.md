@@ -2,9 +2,23 @@
 
 ### Example
 
- - Cached https://thawing-beyond-5538.herokuapp.com/
+#### Copies, refeshed in the background every few minutes 
 
- - Live https://thawing-beyond-5538.herokuapp.com/live
+    - [html](https://thawing-beyond-5538.herokuapp.com) 
+    - [json](https://thawing-beyond-5538.herokuapp.com/json) 
+    - [toml](https://thawing-beyond-5538.herokuapp.com/toml) 
+    - [txt](https://thawing-beyond-5538.herokuapp.com/txt) 
+    - [xml](https://thawing-beyond-5538.herokuapp.com/xml) 
+    - [yaml](https://thawing-beyond-5538.herokuapp.com/yaml) 
+
+#### Run the script live
+
+    - [html](https://thawing-beyond-5538.herokuapp.com/live) 
+    - [json](https://thawing-beyond-5538.herokuapp.com/live/json) 
+    - [toml](https://thawing-beyond-5538.herokuapp.com/live/toml) 
+    - [txt](https://thawing-beyond-5538.herokuapp.com/live/txt) 
+    - [xml](https://thawing-beyond-5538.herokuapp.com/live/xml) 
+    - [yaml](https://thawing-beyond-5538.herokuapp.com/live/yaml) 
 
 ### Notes
 
@@ -21,7 +35,7 @@
 ### Recommended web config & launch
 
     heroku create
-    heroku config:set WEB_TIMEOUT=600 WEB_CONCURRENCY=4 UNICORN_ARGS='-e production'
+    heroku config:set WEB_TIMEOUT=600 WEB_CONCURRENCY=4 UNICORN_ARGS='-E production'
     git push heroku master
 
 
