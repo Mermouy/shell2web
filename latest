@@ -577,7 +577,7 @@ latest_sharutils() {
 
 latest_iputils() {
   note_unsigned 'iputils'
-  sf 'iputils' 's[0-9]*[0-9]'
+  sf 'iputils' 's[0-9]*[0-9]' | sed 's/^s//'
 }
 
 latest_which() {
