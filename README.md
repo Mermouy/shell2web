@@ -21,8 +21,7 @@
 ### Recommended web config & launch
 
     heroku create
-    heroku config:set WEB_TIMEOUT=600
-    heroku config:set WEB_CONCURRENCY=4
+    heroku config:set WEB_TIMEOUT=600 WEB_CONCURRENCY=4 UNICORN_ARGS='-e production'
     git push heroku master
 
 

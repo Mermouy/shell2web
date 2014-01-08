@@ -13,7 +13,7 @@ end
 
 # config (ugly, cleanup todo)
 SHELL2WEB_CMD=var('SHELL2WEB_CMD', './run') # what to run
-SHELL2WEB_CONTENT_TYPE=var('SHELL2WEB_CONTENT_TYPE', 'text/plain')
+SHELL2WEB_CONTENT_TYPE=var('SHELL2WEB_CONTENT_TYPE', 'text/html')
 SHELL2WEB_LIVE=str_to_bool(var('SHELL2WEB_LIVE', 'true')) # allow /live
 SHELL2WEB_TIME=str_to_bool(var('SHELL2WEB_TIME', 'true')) # show start, end and elapsed time
 SHELL2WEB_DELAY=Integer(var('SHELL2WEB_DELAY', 5*60))  # 5 minutes
@@ -90,23 +90,22 @@ before do
 end
 
 get %r{^/live(/(|txt|text|html|yaml|xml|toml|json))?$} do |_, format|
-  # fix format to ext
-  format = 'txt' if format == 'text' || format.nil?
-
+  format ||= 'html'
+  format = 'txt' if format == 'text'
+  which = FORMATS.index(format)
+  content_type FORMAT_CONTENT_TYPES[which]
   stream do |f|
-    run(f, FORMAT_ARGS[FORMATS.index(format)], format)
+    run(f, FORMAT_ARGS[which], format)
   end
 end if SHELL2WEB_LIVE
 
 FORMATS=%w[html json toml txt xml yaml]
 FORMAT_ARGS=[['-H'], ['-j'], ['-t'], [], ['-x'], ['-y']]
+FORMAT_CONTENT_TYPES=%w[text/html application/json application/x-toml plain/text application/xml application/x-yaml]
 
 get %r{^/(|txt|text|html|yaml|xml|toml|json)$} do |format|
-  # check format
-  format ||= 'txt'
-  format.downcase if format.is_a?(String)
-  format = 'txt' if format == 'text' 
-  return [404, {}, 'Bad format'] unless FORMATS.include? format
+  format ||= 'html'
+  format = 'txt' if format == 'text'
 
   file="#{OUTPUT}.#{format}"
 
@@ -114,6 +113,8 @@ get %r{^/(|txt|text|html|yaml|xml|toml|json)$} do |format|
     up_to_estimate = SHELL2WEB_AVG_RUN_TIME + SHELL2WEB_DELAY
     return [404, {}, "No output right now.   Takes up to #{seconds_to_english(up_to_estimate)} have results."]
   end
+
+  content_type FORMAT_CONTENT_TYPES[FORMATS.index(format)]
 
   result = ''
   File.open(file, 'r') { |f|
