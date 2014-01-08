@@ -9,7 +9,8 @@ CMD='./run' # what to run
 CONTENT_TYPE='text/plain'
 LIVE=true # allow /live
 TIME=true # show start, end and elapsed time
-DELAY_BETWEEN_UPDATES=5*60 # 5 minutes
+DELAY_BETWEEN_UPDATES=5*60  # 5 minutes
+AVERAGE_RUN_TIME=4*60
 # config
 
 OUTPUT='tmp/output.txt'
@@ -38,19 +39,20 @@ def seconds_to_english(sec, sep=' ')
 end
 
 def run(f) 
+  # header
   if TIME
     start_date = Time.now
     f << "# started: #{start_date}\n"
   end
 
+  # body
   exit_status = -1
   Open3.popen2e(CMD) { |stdin, stdout_and_stderr, wait_thr| 
-    stdout_and_stderr.each {|line|
-      f << line
-      $stderr.puts("read line: #{line}")
-    }
+    stdout_and_stderr.each {|line| f << line }
     exit_status = wait_thr.value.to_i
   }
+
+  # footer
   last = "exit code: #{exit_status}"
   if TIME
     end_date = Time.now
@@ -60,12 +62,13 @@ def run(f)
   f << "# #{last}\n"
 end
 
+# background worker to update cached copy for /
 Thread.new do
   loop do 
-    sleep(DELAY_BETWEEN_UPDATES)
     FileUtils.mkdir_p('tmp')
     File.open(OUTPUT_TMP, 'w') {|f| run(f) }
     FileUtils.mv OUTPUT_TMP, OUTPUT, :force => true
+    sleep(DELAY_BETWEEN_UPDATES)
   end
 end
 
@@ -81,10 +84,14 @@ end if LIVE
 
 get '/' do
   result = ''
-  File.open(OUTPUT, 'r') { |f|
-    while line = f.gets
-      result += (line =~ /\n$/) ? (line.chop + "\r\n") : line
-    end
-  } if File.exist? OUTPUT
+  if File.exist? OUTPUT
+    result = "No output right now.   Takes up to #{seconds_to_english(DELAY_BETWEEN_UPDATES+AVERAGE_RUN_TIME)} have results."
+  else
+    File.open(OUTPUT, 'r') { |f|
+      while line = f.gets
+        result += (line =~ /\n$/) ? (line.chop + "\r\n") : line
+      end
+    }
+  end
   result
 end
