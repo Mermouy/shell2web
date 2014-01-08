@@ -101,7 +101,7 @@ end if SHELL2WEB_LIVE
 
 FORMATS=%w[html json toml txt xml yaml]
 FORMAT_ARGS=[['-H'], ['-j'], ['-t'], [], ['-x'], ['-y']]
-FORMAT_CONTENT_TYPES=%w[text/html application/json application/x-toml plain/text application/xml application/x-yaml]
+FORMAT_CONTENT_TYPES=%w[text/html application/json text/x-toml text/plain application/xml text/x-yaml]
 
 get %r{^/(|txt|text|html|yaml|xml|toml|json)$} do |format|
   format ||= 'html'
