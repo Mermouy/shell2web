@@ -1,5 +1,9 @@
 # shell2web
 
+## What's cool
+
+Stream output to browsers, apps and devices *as it happens*, without javascript
+
 ### Example
 
 #### Copies, refeshed in the background every few minutes 
